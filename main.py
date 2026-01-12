@@ -1,255 +1,157 @@
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
-from kivy.uix.label import Label
-from kivy.core.window import Window
-from kivy.utils import platform
-from kivy.uix.scrollview import ScrollView
+from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
 from kivy.uix.button import Button
+from kivy.clock import Clock
+from kivy.utils import platform
+from kivy.core.window import Window
 
-from kivy.uix.button import Button
+from datetime import datetime
+import requests
 
-from kivy.uix.button import Button
-from kivy.uix.scrollview import ScrollView
-
-from kivy.uix.button import Button
-from kivy.uix.scrollview import ScrollView
+# ------------------------
+# HOME SCREEN
+# ------------------------
 
 class HomeScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.menu_open = False
+        self.last_price = None
 
-        root = BoxLayout(orientation="horizontal")
-
-        # -------- SOL MENU --------
-        self.menu_container = BoxLayout(
+        # ROOT
+        root = BoxLayout(
             orientation="vertical",
-            size_hint_x=None,
-            width=0
-        )
-
-        scroll = ScrollView()
-        menu = BoxLayout(
-            orientation="vertical",
-            padding=20,
-            spacing=10,
-            size_hint_y=None
-        )
-        menu.bind(minimum_height=menu.setter("height"))
-
-        def menu_button(text, action):
-            btn = Button(
-                text=text,
-                size_hint_y=None,
-                height="48dp",
-                halign="left",
-                valign="middle",
-                background_normal="",
-                background_color=(0, 0, 0, 0)
-            )
-            btn.text_size = (200, None)
-            btn.bind(on_release=action)
-            return btn
-
-        menu.add_widget(menu_button("Ana Ekran", lambda x: self.close_menu()))
-        menu.add_widget(menu_button("Uygulama Hakkında", lambda x: self.go("about")))
-        menu.add_widget(menu_button("Gizlilik Politikası", lambda x: self.go("privacy")))
-
-        scroll.add_widget(menu)
-        self.menu_container.add_widget(scroll)
-        root.add_widget(self.menu_container)
-
-        # -------- ANA İÇERİK --------
-        content = BoxLayout(
-            orientation="vertical",
-            padding=20,
+            padding=30,
             spacing=20
         )
 
-        # ÜST BAR
-        top_bar = BoxLayout(size_hint_y=None, height="48dp")
-
-        burger = Button(
-            text="MENU",
-            font_size="14sp",
-            size_hint_x=None,
-            width="64dp",
-            background_normal="",
-            background_color=(0, 0, 0, 0)
-        )
-        burger.bind(on_release=self.toggle_menu)
-
-        refresh = Button(
-            text="YENİLE",
-            font_size="14sp",
-            size_hint_x=None,
-            width="64dp",
-            background_normal="",
-            background_color=(0, 0, 0, 0)
-        )
-
-        top_bar.add_widget(burger)
-        top_bar.add_widget(Label())
-        top_bar.add_widget(refresh)
-
-        content.add_widget(top_bar)
-
-        # ORTA
-        market = Label(
-            text="GRAM ALTIN",
-            font_size="36sp",
-            bold=True,
-            halign="center"
-        )
-        market.bind(size=market.setter("text_size"))
-
-        info = Label(
-            text="Serbest piyasa",
-            font_size="16sp",
-            halign="center"
-        )
-        info.bind(size=info.setter("text_size"))
-
-        content.add_widget(market)
-        content.add_widget(info)
-
-        # ALT
-        footer = Label(
-            text="Son güncelleme: --:--",
-            font_size="14sp",
+        # ---------------- TOP BAR ----------------
+        top_bar = BoxLayout(
             size_hint_y=None,
-            height="32dp",
-            halign="center"
+            height=50
         )
-        footer.bind(size=footer.setter("text_size"))
 
-        content.add_widget(footer)
+        top_bar.add_widget(Label())  # spacer
 
-        root.add_widget(content)
+        self.refresh_button = Button(
+            text="↻",
+            size_hint=(None, None),
+            size=(48, 48),
+            font_size="24sp",
+            background_normal="",
+            background_color=(0.2, 0.2, 0.2, 1)
+        )
+        self.refresh_button.bind(on_press=self.on_refresh_pressed)
+
+        top_bar.add_widget(self.refresh_button)
+
+        # ---------------- CENTER ----------------
+        center = BoxLayout(
+            orientation="vertical",
+            spacing=10
+        )
+
+        self.price_label = Label(
+            text="0,00 ₺",
+            font_size="48sp",
+            bold=True,
+            color=(1, 1, 1, 1)
+        )
+
+        self.trend_label = Label(
+            text="",
+            font_size="32sp",
+            color=(1, 1, 1, 1)
+        )
+
+        center.add_widget(self.price_label)
+        center.add_widget(self.trend_label)
+
+        # ---------------- BOTTOM ----------------
+        bottom = BoxLayout(
+            size_hint_y=None,
+            height=40
+        )
+
+        self.refresh_label = Label(
+            text="Son güncelleme: —",
+            font_size="14sp",
+            color=(1, 1, 1, 0.7)
+        )
+
+        bottom.add_widget(self.refresh_label)
+
+        # ADD ALL
+        root.add_widget(top_bar)
+        root.add_widget(center)
+        root.add_widget(bottom)
+
         self.add_widget(root)
 
-    def toggle_menu(self, *args):
-        if self.menu_open:
-            self.menu_container.width = 0
-            self.menu_open = False
-        else:
-            self.menu_container.width = 260
-            self.menu_open = True
+    # ------------------------
+    # REFRESH FLOW
+    # ------------------------
 
-    def close_menu(self):
-        self.menu_container.width = 0
-        self.menu_open = False
+    def on_enter(self):
+        self.on_refresh_pressed()
 
-    def go(self, screen):
-        self.manager.go_to(screen)
-        self.close_menu()
+    def on_refresh_pressed(self, *args):
+        self.fake_refresh()
+        self.start_real_refresh()
 
-    def go(self, screen):
-        self.manager.go_to(screen)
-        self.close_menu()
+    def fake_refresh(self):
+        self.refresh_label.text = "Güncelleniyor…"
+        Clock.schedule_once(self.finish_fake_refresh, 1.2)
 
+    def finish_fake_refresh(self, dt):
+        now = datetime.now().strftime("%H:%M")
+        self.refresh_label.text = f"Son güncelleme: {now}"
 
+    # ------------------------
+    # REAL DATA (BINANCE)
+    # ------------------------
 
-class AboutScreen(Screen):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.add_widget(Label(
-            text="Uygulama Hakkında",
-            halign="center",
-            valign="middle",
-            font_size="20sp"
-        ))
+    def start_real_refresh(self):
+        Clock.schedule_once(self.fetch_real_data, 0)
 
+    def fetch_real_data(self, dt):
+        try:
+            price = self.fetch_binance_price()
+            self.update_price(price)
+        except Exception:
+            self.refresh_label.text = "Bağlantı yok"
 
-class PrivacyScreen(Screen):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def fetch_binance_price(self):
+        url = "https://api.binance.com/api/v3/ticker/price?symbol=XAUTRY"
+        r = requests.get(url, timeout=5)
+        return float(r.json()["price"])
 
-        scroll = ScrollView()
-        layout = BoxLayout(
-            orientation="vertical",
-            padding=20,
-            size_hint_y=None
-        )
-        layout.bind(minimum_height=layout.setter("height"))
+    def update_price(self, price):
+        if self.last_price:
+            if price > self.last_price:
+                self.trend_label.text = "↑"
+                self.trend_label.color = (0, 1, 0, 1)
+            elif price < self.last_price:
+                self.trend_label.text = "↓"
+                self.trend_label.color = (1, 0, 0, 1)
 
-        text = (
-            "Gizlilik Politikası\n\n"
-
-            "Ayaz Finans, kullanıcı gizliliğine önem verir. "
-            "Uygulama herhangi bir kullanıcı hesabı oluşturmaz ve "
-            "kullanıcıdan kişisel veri talep etmez.\n\n"
-
-            "Uygulama kapsamında; ad, soyad, e-posta adresi, telefon "
-            "numarası, konum bilgisi veya cihaz kimliği gibi kişisel "
-            "veriler toplanmaz, işlenmez ve saklanmaz.\n\n"
-
-            "Uygulamada gösterilen finansal veriler, yalnızca üçüncü taraf "
-            "açık ve yasal piyasa veri sağlayıcılarından anlık olarak "
-            "alınmaktadır. Bu veriler uygulama içinde kalıcı olarak "
-            "saklanmaz.\n\n"
-
-            "Ayaz Finans, yatırım danışmanlığı hizmeti sunmaz. "
-            "Uygulamada yer alan tüm bilgiler yalnızca bilgilendirme "
-            "amaçlıdır. Kullanıcıların uygulamada yer alan bilgilere "
-            "dayanarak aldıkları finansal kararlardan doğabilecek "
-            "zararlardan uygulama geliştiricisi sorumlu tutulamaz.\n\n"
-
-            "Uygulama, arka planda veri toplamaz ve uygulama kapalıyken "
-            "herhangi bir veri güncellemesi yapmaz.\n\n"
-
-            "Bu gizlilik politikası, uygulamanın mevcut sürümü için "
-            "geçerlidir ve ileride yapılabilecek güncellemelerle "
-            "değiştirilebilir."
-        )
-
-        label = Label(
-            text=text,
-            halign="left",
-            valign="top",
-            size_hint_y=None,
-            text_size=(Window.width - 40, None)
-        )
-        label.bind(texture_size=label.setter("size"))
-
-        layout.add_widget(label)
-        scroll.add_widget(layout)
-        self.add_widget(scroll)
+        self.last_price = price
+        self.price_label.text = f"{price:,.2f} ₺".replace(",", ".")
 
 
-
-class MainScreenManager(ScreenManager):
-
-    def go_to(self, screen_name):
-        self.transition = SlideTransition(direction="left")
-        self.current = screen_name
-
-    def go_back(self):
-        self.transition = SlideTransition(direction="right")
-        self.current = "home"
-
+# ------------------------
+# APP
+# ------------------------
 
 class AyazFinansApp(App):
-
     def build(self):
-        self.sm = MainScreenManager()
-        self.sm.add_widget(HomeScreen(name="home"))
-        self.sm.add_widget(AboutScreen(name="about"))
-        self.sm.add_widget(PrivacyScreen(name="privacy"))
+        Window.clearcolor = (0, 0, 0, 1)
 
-        if platform == "android":
-            Window.bind(on_keyboard=self.android_back)
-
-        return self.sm
-
-    def android_back(self, window, key, *args):
-        if key == 27:
-            if self.sm.current != "home":
-                self.sm.go_back()
-                return True
-        return False
+        sm = ScreenManager()
+        sm.add_widget(HomeScreen(name="home"))
+        return sm
 
 
 if __name__ == "__main__":
