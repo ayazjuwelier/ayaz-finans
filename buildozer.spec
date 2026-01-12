@@ -16,7 +16,7 @@ source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
 source.include_exts = py,png,jpg,kv,atlas
-
+android.archs = arm64-v8a
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
 
@@ -32,19 +32,18 @@ source.include_exts = py,png,jpg,kv,atlas
 
 # (str) Application versioning (method 1)
 version = 0.1
-
+python.version = 3.9
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
 # version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy
+requirements = python3,kivy,pyjnius,cython<3.0
 [android]
 android.ndk = 25b
 android.ndk_api = 23
 android.minapi = 21
-android.archs = arm64-v8a
 android.api = 31
 
 # (str) Custom source folders for requirements
