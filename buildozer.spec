@@ -56,7 +56,7 @@ android.api = 31
 
 # (str) Icon of the application
 #icon.filename = %(source.dir)s/data/icon.png
-
+icon.filename = assets/logo_af_square.png
 # (list) Supported orientations
 # Valid options are: landscape, portrait, portrait-reverse or landscape-reverse
 orientation = portrait
