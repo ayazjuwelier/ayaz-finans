@@ -1,157 +1,107 @@
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-from kivy.clock import Clock
-from kivy.utils import platform
 from kivy.core.window import Window
+from kivy.utils import platform
+from kivy.uix.widget import Widget
 
-from datetime import datetime
-import requests
+# ANDROID ORIENTATION FIX
+if platform == "android":
+    Window.rotation = 0
 
-# ------------------------
-# HOME SCREEN
-# ------------------------
 
 class HomeScreen(Screen):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        self.last_price = None
-
-        # ROOT
-        root = BoxLayout(
-            orientation="vertical",
-            padding=30,
-            spacing=20
-        )
-
-        # ---------------- TOP BAR ----------------
-        top_bar = BoxLayout(
-            size_hint_y=None,
-            height=50
-        )
-
-        top_bar.add_widget(Label())  # spacer
-
-        self.refresh_button = Button(
-            text="↻",
-            size_hint=(None, None),
-            size=(48, 48),
-            font_size="24sp",
-            background_normal="",
-            background_color=(0.2, 0.2, 0.2, 1)
-        )
-        self.refresh_button.bind(on_press=self.on_refresh_pressed)
-
-        top_bar.add_widget(self.refresh_button)
-
-        # ---------------- CENTER ----------------
-        center = BoxLayout(
-            orientation="vertical",
-            spacing=10
-        )
-
-        self.price_label = Label(
-            text="0,00 ₺",
-            font_size="48sp",
-            bold=True,
-            color=(1, 1, 1, 1)
-        )
-
-        self.trend_label = Label(
-            text="",
-            font_size="32sp",
-            color=(1, 1, 1, 1)
-        )
-
-        center.add_widget(self.price_label)
-        center.add_widget(self.trend_label)
-
-        # ---------------- BOTTOM ----------------
-        bottom = BoxLayout(
-            size_hint_y=None,
-            height=40
-        )
-
-        self.refresh_label = Label(
-            text="Son güncelleme: —",
-            font_size="14sp",
-            color=(1, 1, 1, 0.7)
-        )
-
-        bottom.add_widget(self.refresh_label)
-
-        # ADD ALL
-        root.add_widget(top_bar)
-        root.add_widget(center)
-        root.add_widget(bottom)
-
-        self.add_widget(root)
-
-    # ------------------------
-    # REFRESH FLOW
-    # ------------------------
-
-    def on_enter(self):
-        self.on_refresh_pressed()
-
-    def on_refresh_pressed(self, *args):
-        self.fake_refresh()
-        self.start_real_refresh()
-
-    def fake_refresh(self):
-        self.refresh_label.text = "Güncelleniyor…"
-        Clock.schedule_once(self.finish_fake_refresh, 1.2)
-
-    def finish_fake_refresh(self, dt):
-        now = datetime.now().strftime("%H:%M")
-        self.refresh_label.text = f"Son güncelleme: {now}"
-
-    # ------------------------
-    # REAL DATA (BINANCE)
-    # ------------------------
-
-    def start_real_refresh(self):
-        Clock.schedule_once(self.fetch_real_data, 0)
-
-    def fetch_real_data(self, dt):
-        try:
-            price = self.fetch_binance_price()
-            self.update_price(price)
-        except Exception:
-            self.refresh_label.text = "Bağlantı yok"
-
-    def fetch_binance_price(self):
-        url = "https://api.binance.com/api/v3/ticker/price?symbol=XAUTRY"
-        r = requests.get(url, timeout=5)
-        return float(r.json()["price"])
-
-    def update_price(self, price):
-        if self.last_price:
-            if price > self.last_price:
-                self.trend_label.text = "↑"
-                self.trend_label.color = (0, 1, 0, 1)
-            elif price < self.last_price:
-                self.trend_label.text = "↓"
-                self.trend_label.color = (1, 0, 0, 1)
-
-        self.last_price = price
-        self.price_label.text = f"{price:,.2f} ₺".replace(",", ".")
+    pass
 
 
-# ------------------------
-# APP
-# ------------------------
+class AboutScreen(Screen):
+    pass
+
+
+class PrivacyScreen(Screen):
+    pass
+
+
+class MainLayout(BoxLayout):
+    def __init__(self, sm, **kwargs):
+        super().__init__(orientation="vertical", **kwargs)
+        self.sm = sm
+
+        # HEADER
+        header = BoxLayout(size_hint_y=None, height=50)
+        menu_btn = Button(text="☰", size_hint_x=None, width=60)
+        menu_btn.bind(on_release=self.open_menu)
+        header.add_widget(menu_btn)
+        header.add_widget(Label(text="Ayaz Finans"))
+        self.add_widget(header)
+
+        # CONTENT
+        self.content = BoxLayout()
+        self.add_widget(self.content)
+        self.update_content()
+
+    def open_menu(self, *_):
+        self.sm.transition = SlideTransition(direction="right")
+        self.sm.current = "about"
+
+    def update_content(self):
+        self.content.clear_widgets()
+        self.content.add_widget(Label(
+            text="GRAM ALTIN\n\nSerbest piyasa\n\nSon güncelleme: --:--",
+            halign="center",
+            valign="middle",
+            font_size="24sp"
+        ))
+
 
 class AyazFinansApp(App):
     def build(self):
-        Window.clearcolor = (0, 0, 0, 1)
+        self.sm = ScreenManager()
 
-        sm = ScreenManager()
-        sm.add_widget(HomeScreen(name="home"))
-        return sm
+        home = HomeScreen(name="home")
+        about = AboutScreen(name="about")
+        privacy = PrivacyScreen(name="privacy")
+
+        home.add_widget(MainLayout(self.sm))
+
+        about.add_widget(Label(
+            text=(
+                "UYGULAMA HAKKINDA\n\n"
+                "Ayaz Finans, döviz, kıymetli maden ve dijital varlık fiyatlarını "
+                "bilgilendirme amacıyla sunar.\n\n"
+                "Veriler üçüncü taraf açık ve yasal piyasa servislerinden "
+                "anlık olarak alınır, kaydedilmez.\n\n"
+                "Uygulama yatırım danışmanlığı içermez."
+            )
+        ))
+
+        privacy.add_widget(Label(
+            text=(
+                "GİZLİLİK POLİTİKASI\n\n"
+                "Bu uygulama kişisel veri toplamaz.\n"
+                "Hesap, konum, cihaz veya reklam kimliği kullanılmaz.\n\n"
+                "Veriler yalnızca anlık görüntülenir ve saklanmaz."
+            )
+        ))
+
+        self.sm.add_widget(home)
+        self.sm.add_widget(about)
+        self.sm.add_widget(privacy)
+
+        # ANDROID BACK BUTTON FIX
+        Window.bind(on_keyboard=self.on_back)
+
+        return self.sm
+
+    def on_back(self, window, key, *args):
+        if key == 27:
+            if self.sm.current != "home":
+                self.sm.transition = SlideTransition(direction="left")
+                self.sm.current = "home"
+                return True
+        return False
 
 
 if __name__ == "__main__":
