@@ -39,7 +39,7 @@ python.version = 3.9
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,pyjnius,cython<3.0
+requirements = python3,kivy,pyjnius
 [android]
 android.ndk = 25b
 android.ndk_api = 23
