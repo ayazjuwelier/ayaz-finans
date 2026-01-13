@@ -3,13 +3,13 @@ log_level = 2
 [app]
 
 # (str) Title of your application
-title = My Application
+title = Ayaz Finans
 
 # (str) Package name
-package.name = myapp
+package.name = ayazfinans
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = org.test
+package.domain = com.ayaz
 
 # (str) Source code where the main.py live
 source.dir = .
@@ -55,7 +55,7 @@ android.api = 31
 
 # (str) Icon of the application
 #icon.filename = %(source.dir)s/data/icon.png
-icon.filename = assets/logo_af_square.png
+icon.filename = %(source.dir)s/icon.png
 # (list) Supported orientations
 # Valid options are: landscape, portrait, portrait-reverse or landscape-reverse
 orientation = portrait
