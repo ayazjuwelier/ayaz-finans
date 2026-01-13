@@ -79,39 +79,6 @@ class AboutScreen(Screen):
 class PrivacyScreen(Screen):
     pass
 
-
-class MainLayout(BoxLayout):
-    def __init__(self, sm, **kwargs):
-        super().__init__(orientation="vertical", **kwargs)
-        self.sm = sm
-
-        # HEADER
-        header = BoxLayout(size_hint_y=None, height=50)
-        menu_btn = Button(text="☰", size_hint_x=None, width=60)
-        menu_btn.bind(on_release=self.open_menu)
-        header.add_widget(menu_btn)
-        header.add_widget(Label(text="Ayaz Finans"))
-        self.add_widget(header)
-
-        # CONTENT
-        self.content = BoxLayout()
-        self.add_widget(self.content)
-        self.update_content()
-
-    def open_menu(self, *_):
-        self.sm.transition = SlideTransition(direction="right")
-        self.sm.current = "about"
-
-    def update_content(self):
-        self.content.clear_widgets()
-        self.content.add_widget(Label(
-            text="GRAM ALTIN\n\nSerbest piyasa\n\nSon güncelleme: --:--",
-            halign="center",
-            valign="middle",
-            font_size="24sp"
-        ))
-
-
 class AyazFinansApp(App):
     def build(self):
         self.sm = ScreenManager()
