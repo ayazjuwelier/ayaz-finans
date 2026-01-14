@@ -6,7 +6,7 @@ log_level = 2
 title = Ayaz Finans
 
 # (str) Package name
-package.name = ayazfinans
+package.name = ayazfinansdev
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = com.ayaz
@@ -54,7 +54,6 @@ android.api = 31
 #presplash.filename = %(source.dir)s/data/presplash.png
 
 # (str) Icon of the application
-#icon.filename = %(source.dir)s/data/icon.png
 icon.filename = %(source.dir)s/icon.png
 # (list) Supported orientations
 # Valid options are: landscape, portrait, portrait-reverse or landscape-reverse
@@ -250,6 +249,7 @@ fullscreen = 0
 # (str) screenOrientation to set for the main activity.
 # Valid values can be found at https://developer.android.com/guide/topics/manifest/activity-element
 #android.manifest.orientation = fullSensor
+android.manifest.orientation = portrait
 
 # (list) Android additional libraries to copy into libs/armeabi
 #android.add_libs_armeabi = libs/android/*.so
@@ -289,7 +289,7 @@ fullscreen = 0
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
 # this is not the same as app version and should only be edited if you know what you're doing
-# android.numeric_version = 1
+# android.numeric_version = 2
 
 # (bool) enables Android auto backup feature (Android API >=23)
 android.allow_backup = True

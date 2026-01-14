@@ -1,3 +1,6 @@
+from kivy.config import Config
+Config.set('graphics', 'resizable', '0')
+
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
 from kivy.uix.boxlayout import BoxLayout
@@ -5,10 +8,6 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.core.window import Window
 from kivy.utils import platform
-
-# ANDROID ORIENTATION FIX
-if platform == "android":
-    Window.rotation = 0
 
 
 # ---------- HOME SCREEN ----------
